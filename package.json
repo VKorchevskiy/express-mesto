@@ -2,10 +2,12 @@
   "name": "express-mesto",
   "version": "1.0.0",
   "description": "backend for mesto",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "test",
-    "lint": "npx eslint"
+    "start": "PORT=3000 node app.js",
+    "lint": "npx eslint",
+    "dev": "nodemon start"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,11 @@
   "devDependencies": {
     "eslint": "^7.27.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.3"
+    "eslint-plugin-import": "^2.23.3",
+    "nodemon": "^2.0.7"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.12.10"
   }
 }
