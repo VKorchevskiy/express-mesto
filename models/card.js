@@ -20,8 +20,7 @@ const cardSchema = new mongoose.Schema({
     ref: 'user',
   }],
   createdAt: {
-    // type: Date.now,
-    type: String,
+    type: Date,
   },
 
 });
