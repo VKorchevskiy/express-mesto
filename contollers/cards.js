@@ -18,7 +18,7 @@ module.exports.deleteCardById = (req, res) => {
 module.exports.createCard = (req, res) => {
   console.log('CREATE_CARD');
   const { name, link } = req.body;
-  Card.create({ name, link })
+  Card.create({ name, link, owner: req.user._id })
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => res.status(500).send({ message: err.message }));
 };
