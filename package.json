@@ -6,7 +6,7 @@
   "scripts": {
     "test": "test",
     "start": "PORT=3000 node app.js",
-    "lint": "npx eslint",
+    "lint": "npx eslint .",
     "dev": "nodemon start"
   },
   "repository": {
