@@ -1,7 +1,7 @@
 const Card = require('../models/card');
 
 const convertCard = (card) => {
-  const collectedCard = {
+  const convertedCard = {
     likes: card.likes,
     _id: card._id,
     name: card.name,
@@ -9,15 +9,13 @@ const convertCard = (card) => {
     owner: card.owner,
     createdAt: card.createdAt,
   };
-  return collectedCard;
+  return convertedCard;
 };
 
 module.exports.getCards = (req, res) => {
   Card
     .find({})
-    .then((cards) => {
-      res.status(200).send(cards.map((card) => convertCard(card)));
-    })
+    .then((cards) => res.status(200).send(cards.map((card) => convertCard(card))))
     .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию.' }));
 };
 
