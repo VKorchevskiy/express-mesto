@@ -12,6 +12,12 @@ const convertCard = (card) => {
   return convertedCard;
 };
 
+const throwCardNotFoundError = () => {
+  const error = new Error('Карточка не найдена');
+  error.name = 'CardNotFoundError';
+  throw error;
+};
+
 module.exports.getCards = (req, res) => {
   Card
     .find({})
@@ -23,10 +29,18 @@ module.exports.deleteCardById = (req, res) => {
   const { cardId: _id } = req.params;
   Card
     .deleteOne({ _id })
-    .then((card) => res.status(200).send({ data: card }))
+    .orFail(() => throwCardNotFoundError())
+    .then((card) => {
+      if (card) {
+        res.status(200).send({ message: `Карточка с _id - ${_id} удалена.` });
+      }
+    })
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'CardNotFoundError') {
         return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+      }
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Передан некорректный _id для удаления карточки.' });
       }
       return res.status(500).send({ message: 'Ошибка по умолчанию.' });
     });
@@ -55,8 +69,12 @@ module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   { $addToSet: { likes: req.user._id } },
   { new: true },
 )
+  .orFail(() => throwCardNotFoundError())
   .then((card) => res.status(200).send(convertCard(card)))
   .catch((err) => {
+    if (err.name === 'CardNotFoundError') {
+      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+    }
     if (err.name === 'CastError') {
       return res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка.' });
     }
@@ -68,8 +86,12 @@ module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
   { $pull: { likes: req.user._id } },
   { new: true },
 )
+  .orFail(() => throwCardNotFoundError())
   .then((card) => res.status(200).send(convertCard(card)))
   .catch((err) => {
+    if (err.name === 'CardNotFoundError') {
+      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
+    }
     if (err.name === 'CastError') {
       return res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка.' });
     }

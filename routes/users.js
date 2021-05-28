@@ -5,7 +5,7 @@ const {
   createUser,
   patchInfo,
   patchAvatar,
-} = require('../contollers/users');
+} = require('../controllers/users');
 
 router.get('/', getUsers);
 router.get('/:userId', getUserById);
