@@ -1,10 +1,14 @@
+const validator = require('validator');
 const User = require('../models/user');
+// const isEmail = require('validator/lib/isEmail');
 
 const convertUser = (user) => {
   const convertedUser = {
     name: user.name,
     about: user.about,
     avatar: user.avatar,
+    email: user.email,
+    password: user.password,
     _id: user._id,
   };
   return convertedUser;
@@ -41,10 +45,28 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
+  const {
+    name,
+    about,
+    avatar,
+    email,
+    password,
+  } = req.body;
+
   User
-    .create({ name, about, avatar })
-    .then((user) => res.status(200).send(convertUser(user)))
+    .create({
+      name,
+      about,
+      avatar,
+      email,
+      password,
+    })
+    .then((user) => {
+      if (validator.isEmail(email)) {
+        return res.status(200).send(convertUser(user));
+      }
+      return throwUserNotFoundError(); // выкинуть другую ошибку
+    })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя.' });
