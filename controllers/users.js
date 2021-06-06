@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const SALT_ROUNDS = 10;
+const JWT_SECRET = 'super-strong-secret';
 
 const convertUser = (user) => {
   const convertedUser = {
@@ -53,28 +54,26 @@ module.exports.login = (req, res) => {
   return User.findOne({ email })
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return res.status(403).send('Неправильные почта или пароль');
       }
+      return bcrypt.compare(password, user.password, (err, isValid) => {
+        if (!isValid) {
+          return res.status(401).send({ message: 'Неправильные почта или пароль' });
+        }
 
-      return { matched: bcrypt.compare(password, user.password), user };
+        const token = jwt.sign(
+          { _id: user._id },
+          JWT_SECRET,
+          { expiresIn: '7d' },
+        );
+
+        return res.status(200).send({ token });
+      });
     })
-    .then(({ matched, user }) => {
-      if (!matched) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
-      }
-
-      const token = jwt.sign(
-        { _id: user._id },
-        'super-strong-secret',
-        { expiresIn: '7d' },
-      );
-
-      return res.status(200).send({ token });
-    })
-    .catch((err) => {
+    .catch(() => {
       res
         .status(401)
-        .send({ message: err.message });
+        .send({ message: 'Неправильные почта или пароль' });
     });
 };
 
