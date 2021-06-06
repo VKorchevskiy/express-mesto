@@ -48,12 +48,16 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
+module.exports.getCurrentUser = (req, res) => User.findOne({ _id: req.user._id })
+  .then((user) => res.status(200).send(convertUser(user)))
+  .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию.' }));
+
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-  return User.findOne({ email })
+  return User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return res.status(403).send('Неправильные почта или пароль');
+        return res.status(403).send({ message: 'Неправильные почта или пароль' });
       }
       return bcrypt.compare(password, user.password, (err, isValid) => {
         if (!isValid) {
