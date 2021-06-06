@@ -1,6 +1,9 @@
-const validator = require('validator');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 const User = require('../models/user');
-// const isEmail = require('validator/lib/isEmail');
+
+const SALT_ROUNDS = 10;
 
 const convertUser = (user) => {
   const convertedUser = {
@@ -44,6 +47,37 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      return { matched: bcrypt.compare(password, user.password), user };
+    })
+    .then(({ matched, user }) => {
+      if (!matched) {
+        return Promise.reject(new Error('Неправильные почта или пароль'));
+      }
+
+      const token = jwt.sign(
+        { _id: user._id },
+        'super-strong-secret',
+        { expiresIn: '7d' },
+      );
+
+      return res.status(200).send({ token });
+    })
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+};
+
 module.exports.createUser = (req, res) => {
   const {
     name,
@@ -53,26 +87,28 @@ module.exports.createUser = (req, res) => {
     password,
   } = req.body;
 
-  User
-    .create({
-      name,
-      about,
-      avatar,
-      email,
-      password,
-    })
-    .then((user) => {
-      if (validator.isEmail(email)) {
-        return res.status(200).send(convertUser(user));
-      }
-      return throwUserNotFoundError(); // выкинуть другую ошибку
-    })
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя.' });
-      }
-      return res.status(500).send({ message: 'Ошибка по умолчанию.' });
-    });
+  return bcrypt.hash(password, SALT_ROUNDS, (err, hash) => {
+    User.findOne({ email })
+      .then((user) => {
+        if (user) {
+          return res.status(409).send({ message: 'такой пользователь уже существует' });
+        }
+        return User.create({
+          name,
+          about,
+          avatar,
+          email,
+          password: hash,
+        })
+          .then((userData) => res.status(200).send(convertUser(userData)));
+      })
+      .catch((error) => {
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+          return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+        }
+        return res.status(500).send({ message: 'Ошибка по умолчанию.' });
+      });
+  });
 };
 
 module.exports.patchInfo = (req, res) => {
