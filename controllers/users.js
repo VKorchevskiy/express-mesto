@@ -50,7 +50,6 @@ module.exports.getUserById = (req, res) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-
   return User.findOne({ email })
     .then((user) => {
       if (!user) {
