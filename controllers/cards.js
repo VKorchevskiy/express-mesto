@@ -26,6 +26,7 @@ module.exports.getCards = (req, res) => {
 };
 
 module.exports.deleteCardById = (req, res) => {
+  // if (req.user._id !== 1) {}
   const { cardId: _id } = req.params;
   Card
     .deleteOne({ _id })
