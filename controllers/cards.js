@@ -26,15 +26,16 @@ module.exports.getCards = (req, res) => {
 };
 
 module.exports.deleteCardById = (req, res) => {
-  // if (req.user._id !== 1) {}
   const { cardId: _id } = req.params;
-  Card
-    .deleteOne({ _id })
-    .orFail(() => throwCardNotFoundError())
+
+  Card.findById({ _id })
+    .orFail(throwCardNotFoundError)
     .then((card) => {
-      if (card) {
-        res.status(200).send({ message: `Карточка с _id - ${_id} удалена.` });
+      if ((req.user._id.toString()) !== (card.owner._id).toString()) {
+        return res.status(403).send({ message: 'Нельзя удалять чужие карточки' });
       }
+      card.deleteOne();
+      return res.status(200).send({ message: `Карточка с _id - ${_id} удалена.` });
     })
     .catch((err) => {
       if (err.name === 'CardNotFoundError') {
