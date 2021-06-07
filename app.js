@@ -17,6 +17,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(routes);
 
+app.use((err, req, res, next) => {
+  res.status(err.statusCode).send({ message: err.message });
+  next();
+});
+
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
