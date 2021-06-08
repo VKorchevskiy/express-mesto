@@ -14,47 +14,29 @@ const convertCard = (card) => {
   return convertedCard;
 };
 
-// const throwCardNotFoundError = () => {
-//   const error = new Error('Карточка не найдена');
-//   error.name = 'CardNotFoundError';
-//   throw error;
-// };
-
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card
     .find({})
     .then((cards) => res.status(200).send(cards.map((card) => convertCard(card))))
-    .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию.' }));
+    .catch(next);
 };
 
-module.exports.deleteCardById = (req, res) => {
+module.exports.deleteCardById = (req, res, next) => {
   const { cardId: _id } = req.params;
 
   Card.findById({ _id })
-    .orFail(new NotFoundError('Карточка не найдена'))
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((card) => {
       if ((req.user._id.toString()) !== (card.owner._id).toString()) {
-        throw new ForbiddenError('Нельзя удалять чужие карточки');
-        // return res.status(403).send({ message: 'Нельзя удалять чужие карточки' });
+        throw new ForbiddenError('Нельзя удалять чужие карточки.');
       }
       card.deleteOne();
       return res.status(200).send({ message: `Карточка с _id - ${_id} удалена.` });
     })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
-      }
-      if (err.name === 'ForbiddenError') {
-        return res.status(403).send({ message: err.message });
-      }
-      if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Передан некорректный _id для удаления карточки.' });
-      }
-      return res.status(500).send({ message: 'Ошибка по умолчанию.' });
-    });
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card
     .create({
@@ -64,44 +46,23 @@ module.exports.createCard = (req, res) => {
       createdAt: Date.now(),
     })
     .then((card) => res.status(201).send(convertCard(card)))
-    .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки.' });
-      }
-      return res.status(500).send({ message: 'Ошибка по умолчанию.' });
-    });
+    .catch(next);
 };
 
-module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
+module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } },
   { new: true },
 )
-  .orFail(new NotFoundError({ message: 'Карточка не найдена' }))
+  .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
   .then((card) => res.status(200).send(convertCard(card)))
-  .catch((err) => {
-    if (err.name === 'NotFoundError') {
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
-    }
-    if (err.name === 'CastError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка.' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию.' });
-  });
+  .catch(next);
 
-module.exports.dislikeCard = (req, res) => Card.findByIdAndUpdate(
+module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $pull: { likes: req.user._id } },
   { new: true },
 )
-  .orFail(new NotFoundError({ message: 'Карточка не найдена' }))
+  .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
   .then((card) => res.status(200).send(convertCard(card)))
-  .catch((err) => {
-    if (err.name === 'NotFoundError') {
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
-    }
-    if (err.name === 'CastError') {
-      return res.status(400).send({ message: 'Переданы некорректные данные для снятия лайка.' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию.' });
-  });
+  .catch(next);
