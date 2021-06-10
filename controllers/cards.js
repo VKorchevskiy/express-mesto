@@ -43,7 +43,6 @@ module.exports.createCard = (req, res, next) => {
       name,
       link,
       owner: req.user._id,
-      createdAt: Date.now(),
     })
     .then((card) => res.status(201).send(convertCard(card)))
     .catch(next);
