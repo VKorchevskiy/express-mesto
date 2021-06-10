@@ -15,7 +15,7 @@ const convertUser = (user) => {
     about: user.about,
     avatar: user.avatar,
     email: user.email,
-    password: user.password,
+    // password: user.password,
     _id: user._id,
   };
   return convertedUser;
