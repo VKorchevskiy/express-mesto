@@ -1,6 +1,7 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/not-found-error');
 const ForbiddenError = require('../errors/forbidden-error');
+const InvalidDataError = require('../errors/invalid-data-error');
 
 const convertCard = (card) => {
   const convertedCard = {
@@ -12,6 +13,12 @@ const convertCard = (card) => {
     createdAt: card.createdAt,
   };
   return convertedCard;
+};
+
+const processInvalidCardError = (err, next) => {
+  if (err.name === 'CastError' || err.name === 'ValidationError') {
+    next(new InvalidDataError('Переданы некорректные данные карточки.'));
+  }
 };
 
 module.exports.getCards = (req, res, next) => {
@@ -33,7 +40,10 @@ module.exports.deleteCardById = (req, res, next) => {
       card.deleteOne();
       return res.status(200).send({ message: `Карточка с _id - ${_id} удалена.` });
     })
-    .catch(next);
+    .catch((err) => {
+      processInvalidCardError(err, next);
+      next(err);
+    });
 };
 
 module.exports.createCard = (req, res, next) => {
@@ -45,7 +55,10 @@ module.exports.createCard = (req, res, next) => {
       owner: req.user._id,
     })
     .then((card) => res.status(201).send(convertCard(card)))
-    .catch(next);
+    .catch((err) => {
+      processInvalidCardError(err, next);
+      next(err);
+    });
 };
 
 module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
@@ -55,7 +68,10 @@ module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
 )
   .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
   .then((card) => res.status(200).send(convertCard(card)))
-  .catch(next);
+  .catch((err) => {
+    processInvalidCardError(err, next);
+    next(err);
+  });
 
 module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
@@ -64,4 +80,7 @@ module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
 )
   .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
   .then((card) => res.status(200).send(convertCard(card)))
-  .catch(next);
+  .catch((err) => {
+    processInvalidCardError(err, next);
+    next(err);
+  });
