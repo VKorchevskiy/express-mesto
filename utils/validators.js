@@ -35,7 +35,7 @@ const patchUserAvatarValidator = celebrate({
 
 const userIdValidator = celebrate({
   params: Joi.object({
-    cardId: Joi.string().length(24).hex(),
+    userId: Joi.string().length(24).hex(),
   }),
 });
 
