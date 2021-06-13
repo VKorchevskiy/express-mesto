@@ -1,12 +1,21 @@
 const { celebrate } = require('celebrate');
 const Joi = require('joi');
+const validator = require('validator');
+const InvalidDataError = require('../errors/invalid-data-error');
+
+const validateUrl = (url) => {
+  if (!validator.isURL(url, { require_protocol: true })) {
+    throw new InvalidDataError('Переданы некорректные данные.');
+  }
+  return url;
+};
 
 const userValidator = celebrate({
   body: Joi.object({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
-    email: Joi.string().required(),
+    avatar: Joi.string().custom(validateUrl),
+    email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
 });
@@ -20,18 +29,24 @@ const patchUserInfoValidator = celebrate({
 
 const patchUserAvatarValidator = celebrate({
   body: Joi.object({
-    avatar: Joi.string(),
+    avatar: Joi.string().custom(validateUrl),
+  }),
+});
+
+const userIdValidator = celebrate({
+  params: Joi.object({
+    cardId: Joi.string().length(24).hex(),
   }),
 });
 
 const cardSchemaValidator = celebrate({
   body: Joi.object({
     name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().required(),
+    link: Joi.string().custom(validateUrl),
   }),
 });
 
-const IdValidator = celebrate({
+const cardIdValidator = celebrate({
   params: Joi.object({
     cardId: Joi.string().length(24).hex(),
   }),
@@ -41,6 +56,7 @@ module.exports = {
   userValidator,
   patchUserInfoValidator,
   patchUserAvatarValidator,
+  userIdValidator,
   cardSchemaValidator,
-  IdValidator,
+  cardIdValidator,
 };
