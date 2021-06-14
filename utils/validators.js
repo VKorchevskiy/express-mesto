@@ -29,7 +29,7 @@ const patchUserInfoValidator = celebrate({
 
 const patchUserAvatarValidator = celebrate({
   body: Joi.object({
-    avatar: Joi.string().custom(validateUrl),
+    avatar: Joi.string().required().custom(validateUrl),
   }),
 });
 
