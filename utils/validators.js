@@ -41,8 +41,8 @@ const userIdValidator = celebrate({
 
 const cardSchemaValidator = celebrate({
   body: Joi.object({
-    name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().custom(validateUrl),
+    name: Joi.string().required().min(2).max(30),
+    link: Joi.string().required().custom(validateUrl),
   }),
 });
 
