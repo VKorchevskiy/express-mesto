@@ -22,7 +22,7 @@
 
 * Склонировать проект на ПК:
 
-      git clone https://github.com/VKorchevskiy/mesto.git
+      git clone https://github.com/VKorchevskiy/express-mesto.git
 
 * Установить зависимости
 
